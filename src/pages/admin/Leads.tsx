@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Search, Plus, Globe, Mail, Phone, ChevronRight, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
+import { WebsiteAnalyzer } from '@/components/WebsiteAnalyzer'
 
 interface Lead {
   id: string
@@ -42,6 +43,7 @@ export function Leads() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
   const [activities, setActivities] = useState<LeadActivity[]>([])
+  const [showAnalyzer, setShowAnalyzer] = useState(false)
 
   useEffect(() => {
     fetchLeads()
@@ -89,10 +91,19 @@ export function Leads() {
           <h2 className="text-xl font-semibold text-gray-900">Lead Management</h2>
           <p className="text-sm text-gray-500 mt-1">{leads.length} Leads insgesamt</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-[#0D9488] text-white rounded-lg hover:bg-[#0F766E] transition-colors">
-          <Plus className="h-4 w-4" />
-          Neuer Lead
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowAnalyzer(true)}
+            className="flex items-center gap-2 px-4 py-2 border border-[#0D9488] text-[#0D9488] rounded-lg hover:bg-[#0D9488]/5 transition-colors"
+          >
+            <Globe className="h-4 w-4" />
+            Website analysieren
+          </button>
+          <button className="flex items-center gap-2 px-4 py-2 bg-[#0D9488] text-white rounded-lg hover:bg-[#0F766E] transition-colors">
+            <Plus className="h-4 w-4" />
+            Neuer Lead
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -284,6 +295,16 @@ export function Leads() {
           </div>
         </div>
       )}
+
+      {/* Website Analyzer Modal */}
+      <WebsiteAnalyzer
+        isOpen={showAnalyzer}
+        onClose={() => setShowAnalyzer(false)}
+        onLeadSaved={() => {
+          fetchLeads()
+          setShowAnalyzer(false)
+        }}
+      />
     </div>
   )
 }
