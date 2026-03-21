@@ -59,30 +59,43 @@ Include a clear CTA for a 15-minute call.
 Return ONLY the email text in German, no subject line.`
 
 async function fetchWebsiteContent(url: string): Promise<string> {
-  try {
-    // Use allorigins proxy to bypass CORS
-    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
-    const response = await fetch(proxyUrl)
+  const proxies = [
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
+  ]
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`)
+  let lastError = null
+
+  for (const proxyUrl of proxies) {
+    try {
+      const response = await fetch(proxyUrl, { timeout: 10000 })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`)
+      }
+
+      const html = await response.text()
+
+      // Extract text content from HTML
+      const text = html
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+
+      if (text.length > 100) {
+        return text.slice(0, 10000)
+      }
+    } catch (error) {
+      console.warn(`Proxy ${proxyUrl.split('/')[2]} failed:`, error)
+      lastError = error
     }
-
-    const html = await response.text()
-
-    // Extract text content from HTML
-    const text = html
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-
-    return text.slice(0, 10000) // Limit to first 10k chars
-  } catch (error) {
-    console.error('Fetch error:', error)
-    throw new Error('Website konnte nicht geladen werden. Versuche eine andere URL.')
   }
+
+  console.error('All proxies failed:', lastError)
+  throw new Error('Website konnte nicht geladen werden. Bitte URL prüfen.')
 }
 
 async function analyzeWithClaude(content: string, prompt: string): Promise<string> {
