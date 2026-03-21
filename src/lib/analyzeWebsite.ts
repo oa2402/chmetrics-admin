@@ -113,7 +113,12 @@ async function analyzeWithClaude(content: string, prompt: string): Promise<strin
   }
 
   const data = await response.json()
-  return data.choices[0].messages.content
+  console.log('MiniMax Response:', JSON.stringify(data, null, 2))
+  // MiniMax returns choices array with message object
+  if (data.choices && data.choices[0]) {
+    return data.choices[0].message?.content || data.choices[0].text || JSON.stringify(data.choices[0])
+  }
+  throw new Error('Unexpected MiniMax response format')
 }
 
 export async function analyzeWebsite(url: string): Promise<WebsiteAnalysis> {
