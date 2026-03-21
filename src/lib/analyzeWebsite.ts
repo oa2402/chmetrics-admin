@@ -111,7 +111,8 @@ async function analyzeWithClaude(content: string, prompt: string): Promise<strin
     },
     body: JSON.stringify({
       model: 'abab6.5s-chat',
-      tokens_to_generate: 4096,
+      max_tokens: 4096,
+      temperature: 0.7,
       messages: [
         {
           role: 'user',
@@ -122,14 +123,22 @@ async function analyzeWithClaude(content: string, prompt: string): Promise<strin
   })
 
   if (!response.ok) {
-    throw new Error(`MiniMax API error: ${response.status}`)
+    const errorText = await response.text()
+    console.error('MiniMax API Error:', response.status, errorText)
+    throw new Error(`MiniMax API error: ${response.status} - ${errorText}`)
   }
 
   const data = await response.json()
   console.log('MiniMax Response:', JSON.stringify(data, null, 2))
-  // MiniMax returns choices array with message object
+
+  // MiniMax returns choices array
   if (data.choices && data.choices[0]) {
-    return data.choices[0].message?.content || data.choices[0].text || JSON.stringify(data.choices[0])
+    const choice = data.choices[0]
+    return choice.message?.content || choice.text || JSON.stringify(choice)
+  }
+  // Fallback: try to extract from base_resp
+  if (data.base_resp) {
+    throw new Error(`MiniMax error: ${data.base_resp.status_msg} (code: ${data.base_resp.status_code})`)
   }
   throw new Error('Unexpected MiniMax response format')
 }
