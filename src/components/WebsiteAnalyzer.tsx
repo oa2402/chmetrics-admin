@@ -35,11 +35,14 @@ export function WebsiteAnalyzer({ isOpen, onClose, onLeadSaved }: WebsiteAnalyze
     setProgress(20)
 
     try {
+      // Ensure URL has protocol
+      const normalizedUrl = url.startsWith('http') ? url : `https://${url}`
+
       // Step 1: Fetch and analyze website
       setStep('analyzing')
       setProgress(50)
 
-      const result = await analyzeWebsite(url)
+      const result = await analyzeWebsite(normalizedUrl)
       setAnalysis(result)
       setProgress(70)
 
