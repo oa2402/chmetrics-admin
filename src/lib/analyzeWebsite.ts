@@ -60,12 +60,9 @@ Return ONLY the email text in German, no subject line.`
 
 async function fetchWebsiteContent(url: string): Promise<string> {
   try {
-    // Use a CORS proxy or direct fetch
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'CHMetrics Website Analyzer Bot/1.0'
-      }
-    })
+    // Use allorigins proxy to bypass CORS
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
+    const response = await fetch(proxyUrl)
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`)
@@ -84,7 +81,7 @@ async function fetchWebsiteContent(url: string): Promise<string> {
     return text.slice(0, 10000) // Limit to first 10k chars
   } catch (error) {
     console.error('Fetch error:', error)
-    throw new Error('Website konnte nicht geladen werden')
+    throw new Error('Website konnte nicht geladen werden. Versuche eine andere URL.')
   }
 }
 
