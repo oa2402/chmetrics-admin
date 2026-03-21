@@ -1,7 +1,7 @@
 import { supabase } from './supabase'
 
-const ANTHROPIC_API_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY
-const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages'
+const MINIMAX_API_KEY = import.meta.env.VITE_MINIMAX_API_KEY
+const MINIMAX_API_URL = 'https://api.minimax.chat/v1/text/chatcompletion_v2'
 
 export interface WebsiteAnalysis {
   company_name: string
@@ -86,21 +86,19 @@ async function fetchWebsiteContent(url: string): Promise<string> {
 }
 
 async function analyzeWithClaude(content: string, prompt: string): Promise<string> {
-  if (!ANTHROPIC_API_KEY) {
-    throw new Error('VITE_ANTHROPIC_API_KEY not configured')
+  if (!MINIMAX_API_KEY) {
+    throw new Error('VITE_MINIMAX_API_KEY not configured')
   }
 
-  const response = await fetch(ANTHROPIC_API_URL, {
+  const response = await fetch(MINIMAX_API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
+      'Authorization': `Bearer ${MINIMAX_API_KEY}`
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 4096,
+      model: 'abab6.5s-chat',
+      tokens_to_generate: 4096,
       messages: [
         {
           role: 'user',
@@ -111,11 +109,11 @@ async function analyzeWithClaude(content: string, prompt: string): Promise<strin
   })
 
   if (!response.ok) {
-    throw new Error(`Claude API error: ${response.status}`)
+    throw new Error(`MiniMax API error: ${response.status}`)
   }
 
   const data = await response.json()
-  return data.content[0].text
+  return data.choices[0].messages.content
 }
 
 export async function analyzeWebsite(url: string): Promise<WebsiteAnalysis> {
