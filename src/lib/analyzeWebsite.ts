@@ -69,7 +69,7 @@ async function fetchWebsiteContent(url: string): Promise<string> {
 
   for (const proxyUrl of proxies) {
     try {
-      const response = await fetch(proxyUrl, { timeout: 10000 })
+      const response = await fetch(proxyUrl)
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`)
