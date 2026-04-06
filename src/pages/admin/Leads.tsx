@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Search, Plus, Globe, Mail, Phone, ChevronRight, X } from 'lucide-react'
+import { Search, Plus, Globe, Mail, Phone, ChevronRight, X, PhoneCall, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { WebsiteAnalyzer } from '@/components/WebsiteAnalyzer'
+import { startCall } from '@/lib/bland'
 
 interface Lead {
   id: string
@@ -44,6 +45,33 @@ export function Leads() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
   const [activities, setActivities] = useState<LeadActivity[]>([])
   const [showAnalyzer, setShowAnalyzer] = useState(false)
+  const [calling, setCalling] = useState<string | null>(null)
+
+  const handleCall = async (lead: Lead) => {
+    if (!lead.id) return
+    const phone = (lead as any).phone
+    if (!phone) {
+      alert('Keine Telefonnummer für diesen Lead hinterlegt.')
+      return
+    }
+    setCalling(lead.id)
+    try {
+      const result = await startCall({
+        phoneNumber: phone,
+        leadId: lead.id,
+        companyName: lead.company_name,
+        contactName: lead.contact_name ?? undefined,
+        language: ((lead as any).country === 'AT' ? 'de-AT' : (lead as any).country === 'CH' ? 'de-CH' : 'de'),
+      })
+      await supabase.from('leads').update({ call_status: 'calling' }).eq('id', lead.id)
+      await fetchLeads()
+      alert(`Anruf gestartet. Call ID: ${result.callId}`)
+    } catch (err: any) {
+      alert(`Fehler beim Anruf: ${err.message}`)
+    } finally {
+      setCalling(null)
+    }
+  }
 
   useEffect(() => {
     fetchLeads()
@@ -261,8 +289,14 @@ export function Leads() {
 
               {/* Actions */}
               <div className="space-y-2">
-                <button className="w-full py-2 bg-[#0D9488] text-white rounded-lg hover:bg-[#0F766E] transition-colors">
-                  Website analysieren
+                <button
+                  onClick={() => handleCall(selectedLead)}
+                  disabled={calling === selectedLead.id}
+                  className="w-full py-2 bg-[#0D9488] text-white rounded-lg hover:bg-[#0F766E] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {calling === selectedLead.id
+                    ? <><Loader2 className="h-4 w-4 animate-spin" /> Wird angerufen...</>
+                    : <><PhoneCall className="h-4 w-4" /> Clara anrufen lassen</>}
                 </button>
                 <button className="w-full py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
                   E-Mail senden
