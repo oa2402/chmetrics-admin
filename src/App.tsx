@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AdminLayout } from './pages/admin/AdminLayout'
 import { Dashboard } from './pages/admin/Dashboard'
 import { Leads } from './pages/admin/Leads'
+import { Kampagnen } from './pages/admin/Kampagnen'
+import { Calls } from './pages/admin/Calls'
 import { Posts } from './pages/admin/Posts'
 import { Reports } from './pages/admin/Reports'
 import { Settings } from './pages/admin/Settings'
@@ -64,6 +66,8 @@ function App() {
         >
           <Route index element={<Dashboard />} />
           <Route path="leads" element={<Leads />} />
+          <Route path="kampagnen" element={<Kampagnen />} />
+          <Route path="calls" element={<Calls />} />
           <Route path="posts" element={<Posts />} />
           <Route path="reports" element={<Reports />} />
           <Route path="settings" element={<Settings />} />

@@ -59,43 +59,36 @@ Include a clear CTA for a 15-minute call.
 Return ONLY the email text in German, no subject line.`
 
 async function fetchWebsiteContent(url: string): Promise<string> {
-  const proxies = [
-    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-    `https://corsproxy.io/?${encodeURIComponent(url)}`,
-    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
-  ]
+  try {
+    const { data, error } = await supabase.functions.invoke('fetch-website', {
+      body: { url }
+    })
 
-  let lastError = null
-
-  for (const proxyUrl of proxies) {
-    try {
-      const response = await fetch(proxyUrl)
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`)
-      }
-
-      const html = await response.text()
-
-      // Extract text content from HTML
-      const text = html
-        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-        .replace(/<[^>]+>/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim()
-
-      if (text.length > 100) {
-        return text.slice(0, 10000)
-      }
-    } catch (error) {
-      console.warn(`Proxy ${proxyUrl.split('/')[2]} failed:`, error)
-      lastError = error
+    if (error) {
+      throw new Error(`Edge Function error: ${error.message}`)
     }
-  }
 
-  console.error('All proxies failed:', lastError)
-  throw new Error('Website konnte nicht geladen werden. Bitte URL prüfen.')
+    if (!data?.html) {
+      throw new Error('No HTML returned from Edge Function')
+    }
+
+    // Extract text content from HTML
+    const text = data.html
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+
+    if (text.length > 100) {
+      return text.slice(0, 10000)
+    }
+
+    throw new Error('Website content too short')
+  } catch (error) {
+    console.error('Edge Function fetch failed:', error)
+    throw new Error('Website konnte nicht geladen werden. Bitte URL prüfen.')
+  }
 }
 
 async function analyzeWithClaude(content: string, prompt: string): Promise<string> {

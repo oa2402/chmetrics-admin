@@ -6,7 +6,9 @@ import {
   BarChart3,
   Settings,
   LogOut,
-  Heart
+  Heart,
+  Phone,
+  Megaphone,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
@@ -14,6 +16,8 @@ import { cn } from '@/lib/utils'
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/leads', label: 'Leads', icon: Users },
+  { href: '/admin/kampagnen', label: 'Kampagnen', icon: Megaphone },
+  { href: '/admin/calls', label: 'Call-Log', icon: Phone },
   { href: '/admin/posts', label: 'LinkedIn Posts', icon: FileText },
   { href: '/admin/reports', label: 'Reports', icon: BarChart3 },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
